@@ -22,6 +22,18 @@ if __name__ == '__main__':
         name=package_name,
         author=__author__,
         version=__version__,
+        description='Matrix deployment module for Fabric (offregister)',
+        classifiers=[
+            'Development Status :: 7 - Inactive',
+            'Intended Audience :: Developers',
+            'Topic :: Software Development',
+            'Topic :: Software Development :: Libraries :: Python Modules',
+            'License :: OSI Approved :: MIT License',
+            'License :: OSI Approved :: Apache Software License',
+            'Programming Language :: Python',
+            'Programming Language :: Python :: 2.7',
+            'Programming Language :: Python :: 2 :: Only'
+        ],
         install_requires=['pyyaml', 'fabric==1.14.0'],
         test_suite=package_name + '.tests',
         packages=find_packages(),
