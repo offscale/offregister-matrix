@@ -1,4 +1,10 @@
-from io import StringIO
+from sys import version
+
+if version[0] == "2":
+    from cStringIO import StringIO
+
+else:
+    from io import StringIO
 
 from fabric.context_managers import shell_env
 from fabric.contrib.files import exists
