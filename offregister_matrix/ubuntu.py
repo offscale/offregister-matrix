@@ -8,8 +8,7 @@ else:
 
 from fabric.context_managers import shell_env
 from fabric.contrib.files import exists
-from fabric.operations import run
-from fabric.operations import sudo, put
+from fabric.operations import put, run, sudo
 from nginx_parse_emit import emit, utils
 from nginxparser import dumps, loads
 from offregister_certificate import ubuntu as certificate
