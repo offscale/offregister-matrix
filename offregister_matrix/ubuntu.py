@@ -6,9 +6,7 @@ if version[0] == "2":
 else:
     from io import StringIO
 
-from fabric.context_managers import shell_env
 from fabric.contrib.files import exists
-from fabric.operations import put, run, sudo
 from nginx_parse_emit import emit, utils
 from nginxparser import dumps, loads
 from offregister_certificate import ubuntu as certificate
@@ -18,24 +16,26 @@ from offregister_nginx import ubuntu as nginx
 
 
 def install0(*args, **kwargs):
-    if run("dpkg -s matrix-synapse", quiet=True, warn_only=True).failed:
-        sudo("add-apt-repository https://matrix.org/packages/debian/")
-        sudo(
+    if c.run("dpkg -s matrix-synapse", hide=True, warn=True).exited != 0:
+        c.sudo("add-apt-repository https://matrix.org/packages/debian/")
+        c.sudo(
             "wget -qO - https://matrix.org/packages/debian/repo-key.asc | sudo apt-key add -"
         )
-        with shell_env(DEBIAN_FRONTEND="noninteractive"):
-            sudo(
-                "echo matrix-synapse matrix-synapse/server-name string {matrix_server_name} | debconf-set-selections".format(
-                    matrix_server_name=kwargs["MATRIX_SERVER_NAME"]
-                )
-            )
-            sudo(
-                "echo matrix-synapse matrix-synapse/report-stats boolean {report_stats} | debconf-set-selections".format(
-                    report_stats=("false", "true")[kwargs.get("REPORT_STATS", False)]
-                )
-            )
-            apt_depends("matrix-synapse")
-        sudo("systemctl enable matrix-synapse")
+        env = dict(DEBIAN_FRONTEND="noninteractive")
+        c.sudo(
+            "echo matrix-synapse matrix-synapse/server-name string {matrix_server_name} | debconf-set-selections".format(
+                matrix_server_name=kwargs["MATRIX_SERVER_NAME"]
+            ),
+            env=env,
+        )
+        c.sudo(
+            "echo matrix-synapse matrix-synapse/report-stats boolean {report_stats} | debconf-set-selections".format(
+                report_stats=("false", "true")[kwargs.get("REPORT_STATS", False)]
+            ),
+            env=env,
+        )
+        apt_depends(c, "matrix-synapse")
+        c.sudo("systemctl enable matrix-synapse")
         return "installed"
     return "already installed"
 
@@ -81,7 +81,7 @@ def configure_nginx2(*args, **kwargs):
         )
     )
 
-    put(
+    c.put(
         sio,
         "/etc/nginx/sites-enabled/{matrix_server_name}".format(
             matrix_server_name=kwargs["MATRIX_SERVER_NAME"]
@@ -93,31 +93,31 @@ def configure_nginx2(*args, **kwargs):
 
 def deploy_riot3(riot_version="0.16.5", root="/var/www/riot", *args, **kwargs):
     if kwargs.get("clean_riot"):
-        sudo("rm -rf {root}".format(root=root))
-    elif exists("{root}/home.html".format(root=root)):
+        c.sudo("rm -rf {root}".format(root=root))
+    elif exists(c, runner=c.run, path="{root}/home.html".format(root=root)):
         return "already deployed"
 
-    apt_depends("curl")
+    apt_depends(c, "curl")
 
-    run("mkdir -p ~/Downloads")
-    sudo("mkdir -p {root}".format(root=root))
+    c.run("mkdir -p ~/Downloads")
+    c.sudo("mkdir -p {root}".format(root=root))
 
     p = "riot-v{version}.tar.gz".format(version=riot_version)
-    run(
+    c.run(
         "curl -L https://github.com/vector-im/riot-web/releases/download/v{version}/{p} -o ~/Downloads/{p}".format(
             version=riot_version, p=p
         )
     )
-    sudo(
+    c.sudo(
         "tar -C {root} -xzf ~/Downloads/{p} --strip-components=1".format(root=root, p=p)
     )
     return "deployed"
 
 
 def configure_riot4(root="/var/www/riot", **kwargs):
-    apt_depends("jq")
+    apt_depends(c, "jq")
 
-    sudo(
+    c.sudo(
         """jq '.default_hs_url = "https://{matrix_server_name}" """
         '| .cross_origin_renderer_url = "https://{matrix_server_name}/v1.html" '
         """| .roomDirectory.servers = ["{matrix_server_name}"] + .roomDirectory.servers' """
@@ -146,7 +146,7 @@ def configure_riot_nginx5(root="/var/www/riot", **kwargs):
         )
     )
 
-    put(
+    c.put(
         sio,
         "/etc/nginx/sites-enabled/{server_name}".format(
             server_name=kwargs["SERVER_NAME"]

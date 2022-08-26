@@ -44,7 +44,7 @@ if __name__ == "__main__":
             "Programming Language :: Python",
             "Programming Language :: Python :: 2.7",
         ],
-        install_requires=["pyyaml", "fab-classic"],
+        install_requires=["pyyaml", "fabric2"],
         test_suite=package_name + ".tests",
         packages=find_packages(),
         package_dir={package_name: package_name},
