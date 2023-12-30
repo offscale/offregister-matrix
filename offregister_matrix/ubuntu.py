@@ -15,7 +15,7 @@ from offregister_fab_utils.ubuntu.systemd import restart_systemd
 from offregister_nginx import ubuntu as nginx
 
 
-def install0(*args, **kwargs):
+def install0(c, *args, **kwargs):
     if c.run("dpkg -s matrix-synapse", hide=True, warn=True).exited != 0:
         c.sudo("add-apt-repository https://matrix.org/packages/debian/")
         c.sudo(
@@ -40,11 +40,11 @@ def install0(*args, **kwargs):
     return "already installed"
 
 
-def restart1(*args, **kwargs):
+def restart1(c, *args, **kwargs):
     return restart_systemd("matrix-synapse")
 
 
-def configure_nginx2(*args, **kwargs):
+def configure_nginx2(c, *args, **kwargs):
     kwargs.setdefault("LISTEN_PORT", 80)
 
     nginx.install_nginx0()
