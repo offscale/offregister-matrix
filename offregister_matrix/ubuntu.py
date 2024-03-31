@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from sys import version
 
 if version[0] == "2":
